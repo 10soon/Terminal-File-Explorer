@@ -3,7 +3,8 @@
 * Program can be exited using `Cntl+x`.
 
 ## Normal Mode
-* Default mode of file explorer, allowing user to navigate through file system using keyboard shortcuts. 
+* Default mode of file explorer, allowing user to navigate through file system using keyboard shortcuts.
+* Displays directory content similar to `ls` command output in Unix based systems. 
 
 ### Keyboard Shortcuts
 1. Up: Up arrow key
