@@ -25,10 +25,14 @@ using namespace std;
 #define K_DOWN 66
 #define K_LEFT 68
 #define K_RIGHT 67
-#define LEAVE_LINES 3   //Last 3 lines should be empty
+//Last 3 lines should be empty
+#define LEAVE_LINES 3   
 int col_position=0, owner_col_no=1, group_col_no=2, size_col_no=3, start_index=-1, end_index=-1, sizelen=0, ownerlen=0, grouplen=0;
-int row_cursor=1, col_cursor=1, d_output_index=0; //index for row_cursor and col_cursor starts from 1 
-char cwd[100];  //maximum current working directory length is fixed to 99 characters.
+// index for row_cursor and col_cursor starts from 1. row_cursor and col_cursor store the row and col number where cursor should be positioned.
+// d_output_index stores the row index in matrix, for the current cursor position
+int row_cursor=1, col_cursor=1, d_output_index=0; 
+//maximum current working directory length is fixed to 99 characters.
+char cwd[100];  
 stack<string> back_stack, forward_stack;
 vector<vector<string>> d_output;
 struct winsize size;
@@ -152,6 +156,7 @@ void display() {
     cout<<"NORMAL MODE";
 }
 
+// Function for debugging stack
 void print(stack<string> st) {
     stack<string> temp = st;
     cout<<endl<<endl;
@@ -177,26 +182,33 @@ bool is_directory(string path) {
     return res;
 }
 
+// construct full path using path (parent folder path of the file) and filename. 
 string get_full_file_path(string path, string file) {
     string res=path;
 
+    // Remove ending forward slash, to keep concatenation consistent later on. Later on a forward slash is added and hence if it exists in the path already, needs to be removed.
     if(res[res.length()-1]=='/') {
         res.resize(res.length()-1);
     }
 
     if(file.length()>1 && (file[0]=='~' || (file[0]=='.' && file[1]=='/') )) {
+        // if filename begins with "~/" or "./" then remove the first two characters from path
         file=file.substr(2);
         res=res+'/'+file;
     } else if(file[0]!='~' && file[0]!='.') {
+        // if filename does not contain "~" or "." then simply concatenate
         res=res+'/'+file;
     } else if(file[0]=='.' && file.length()>1) {
+        // for the case "create_file foo.txt ." where destination folder is "." (implying current folder). Here file will store "." only and can be concatenated as it is with path. 
         res=res+'/'+file;
     }
 
     return res;
 }
 
+// construct full path of directory
 string get_full_directory_path(string dir) {
+    // get current working directory
     string res=cwd;
 
     if(dir.length()>1 && (dir[0]=='~' || (dir[0]=='.' && dir[1]=='/') )) {
@@ -313,6 +325,7 @@ string execute_command(vector<string> &command) {
                     //not root directory
                     dir_path = dir_path+"/"+temp.substr(index+1);
                 } else {
+                    // root directory e.g "/."
                     dir_path = dir_path+"/";
                 }
                 if(create_dir(dir_path,convert_permissions(permissions))==-1) {
@@ -321,7 +334,6 @@ string execute_command(vector<string> &command) {
             }
         }
     } else if(command[0]=="delete_file") {  
-        //file path is relative to cwd. No need to convert to full path
         if(command.size()!=2) {
             err_msg = "Invalid number of arguments";
         } else {    
@@ -406,6 +418,7 @@ bool search(string file, string dest) {
     int index;
     DIR *dir;
 
+    // remove filename from full path given
     index = file.find_last_of('/');
     if(index==string::npos) {
         return found;
@@ -418,6 +431,7 @@ bool search(string file, string dest) {
         }
     }
 
+    // search for file/folder in BFS manner
     dirs.push(dest);
     while(!(dirs.empty())) {
         dir_name = dirs.front();
@@ -458,6 +472,7 @@ string remove_directory(string dir_og) {
     struct stat d_info;
     DIR *dir;
 
+    // in BFS manner, read directories into a stack and remove files as encountered
     dirs.push(dir_og);
     while(!(dirs.empty())) {
         dir_name = dirs.front();
@@ -522,10 +537,12 @@ string move_directory(string dir_og, string dest) {
                 //not root directory
                 dest = dest+"/"+dir_name.substr(index+1);
             } else {
+                // e.g. "/."
                 dest = dest+"/";
             }
         } else if(index!=0 && dir_name.length()>1) { 
             //not root directory and already has / at end
+            // e.g. "./"
             dest+=dir_name.substr(index+1);       
         }
 
@@ -799,6 +816,7 @@ bool comparator(vector<string> a, vector<string> b) {
     return (*(a.rbegin()) < *(b.rbegin()));
 }
 
+// store contents of directory in matrix
 int list_out(string path) {   
     //returns 1 if error
     string permissions, temp_path, temp;
@@ -876,7 +894,7 @@ int list_out(string path) {
     sort(d_output.begin(), d_output.end(), comparator);
     display();
 
-    //get column position for cursor
+    //get column position for cursor. cursor is placed at the first letter of the filename
     col_position=0;
     for(int i=0; i<(d_output[0].size()-1); ++i) {
         if(i==size_col_no) {
@@ -917,6 +935,7 @@ int nmode_keyinput() {
     while(1) {
         key = cin.get();
         if(key==ESC) {
+            // detect arrow keys
             key = cin.get();
             key = cin.get();
             switch(key) {
@@ -935,6 +954,7 @@ int nmode_keyinput() {
                             }
                             break;
                 case K_LEFT: 
+                            // top string in back_stack stores the current display path
                             if(back_stack.size()>1) {
                                 start_index=end_index=-1;
                                 stack_string = back_stack.top();
@@ -978,6 +998,7 @@ int nmode_keyinput() {
                 } 
 
                 back_stack.push(stack_string);
+                // on opening a folder, forward stack should become empty
                 clear_stack(forward_stack);
                 err = list_out(stack_string);
                 if(err == 1) {
@@ -1103,6 +1124,7 @@ int cmode_keyinput() {
 
             //position cursor at last line
             position_cursor(size.ws_row,1);
+            // clear everything after cursor position in that line
             printf("%c[K",ESC);
 
             //Save cursor position
@@ -1128,6 +1150,7 @@ int cmode_keyinput() {
                 position_cursor(size.ws_row-1,xpos);
             } else {
                 position_cursor(size.ws_row-1,3);
+                // clear everything after cursor position in that line
                 printf("%c[K",ESC);
                 str.clear();
             }
@@ -1139,6 +1162,7 @@ int cmode_keyinput() {
             //backspace
             if(str.length()) {
                 printf("%c[1D",ESC);
+                // clear everything after cursor position in that line
                 printf("%c[K",ESC);
                 str.resize(str.length()-1);
             }

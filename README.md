@@ -19,6 +19,7 @@
 
 ## Command Mode
 * Allows user to enter different commands at the bottom of the screen.
+* Press `:` to enter command mode.
 
 ### Commands
 1. Copy: `copy <source_file(s)/directory(ies)> <destination_directory>`
@@ -35,4 +36,5 @@
 8. Goto: `goto <location>` <br>
     Location is absolute path w.r.t. home.
 9. Search: `search <file_name>` or `search <directory_name>`
+    File/Directory name should be relative to home. 
 10. Exit command mode: `Esc` key
