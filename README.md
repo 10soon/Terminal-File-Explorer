@@ -6,6 +6,8 @@
 * Default mode of file explorer, allowing user to navigate through file system using keyboard shortcuts.
 * Displays directory content similar to `ls` command output in Unix based systems. 
 
+![normal_mode](normal_mode.png)
+
 ### Keyboard Shortcuts
 1. Up: Up arrow key
 2. Down: Down arrow key
@@ -20,6 +22,8 @@
 ## Command Mode
 * Allows user to enter different commands at the bottom of the screen.
 * Press `:` to enter command mode.
+
+![command_mode](command_mode.png)
 
 ### Commands
 1. Copy: `copy <source_file(s)/directory(ies)> <destination_directory>`
